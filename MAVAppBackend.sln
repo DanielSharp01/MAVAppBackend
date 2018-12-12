@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28407.52
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MAVAppBackend", "MAVAppBackend\MAVAppBackend.csproj", "{C27C9542-8FEF-4A2C-BD7B-CBC0CC927136}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MAVAppBackendTest", "MAVAppBackendTest\MAVAppBackendTest.csproj", "{E779A600-73D0-450E-9FA7-027A973D6308}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C27C9542-8FEF-4A2C-BD7B-CBC0CC927136}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C27C9542-8FEF-4A2C-BD7B-CBC0CC927136}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C27C9542-8FEF-4A2C-BD7B-CBC0CC927136}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C27C9542-8FEF-4A2C-BD7B-CBC0CC927136}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E779A600-73D0-450E-9FA7-027A973D6308}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E779A600-73D0-450E-9FA7-027A973D6308}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E779A600-73D0-450E-9FA7-027A973D6308}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E779A600-73D0-450E-9FA7-027A973D6308}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9521290F-16AE-430A-9F1B-71DFA272BE05}
+	EndGlobalSection
+EndGlobal
