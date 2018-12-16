@@ -15,6 +15,11 @@ namespace MAVAppBackend.MAV
         public HttpStatusCode StatusCode { get; }
 
         /// <summary>
+        /// Request JSON object
+        /// </summary>
+        public JObject RequestObject { get; }
+
+        /// <summary>
         /// Response JSON object, null if failed
         /// </summary>
         public JObject? ResponseObject { get; }
@@ -22,7 +27,7 @@ namespace MAVAppBackend.MAV
         /// <summary>
         /// Parsing succeded the response object is definetely non null
         /// </summary>
-        public bool ParsingSucceded => ResponseObject != null;
+        public bool RequestSucceded => ResponseObject != null;
 
         /// <summary>
         /// Result part of the response object
@@ -35,10 +40,12 @@ namespace MAVAppBackend.MAV
         public JObject? Param => ResponseObject?["d"]["param"] as JObject;
 
         /// <param name="statusCode">Http status code</param>
+        /// <param name="requestObject">Request JSON object</param>
         /// <param name="responseObject">Response JSON object, null if failed</param>
-        public APIResponse(HttpStatusCode statusCode, JObject? responseObject)
+        public APIResponse(HttpStatusCode statusCode, JObject requestObject, JObject? responseObject)
         {
             StatusCode = statusCode;
+            RequestObject = requestObject;
             ResponseObject = responseObject;
         }
     }

@@ -53,15 +53,15 @@ namespace MAVAppBackend.MAV
                 var response = await client.PostAsync("http://vonatinfo.mav-start.hu/map.aspx/getData", new StringContent(RequestObject.ToString(), Encoding.UTF8, "application/json"));
                 statusCode = response.StatusCode;
                 var responseString = await response.Content.ReadAsStringAsync();
-                return new APIResponse(statusCode, JObject.Parse(responseString));
+                return new APIResponse(statusCode, RequestObject, JObject.Parse(responseString));
             }
             catch (HttpRequestException)
             {
-                return new APIResponse(statusCode, null);
+                return new APIResponse(statusCode, RequestObject, null);
             }
             catch (JsonReaderException)
             {
-                return new APIResponse(statusCode, null);
+                return new APIResponse(statusCode, RequestObject, null);
             }
         }
     }

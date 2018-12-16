@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,7 +26,8 @@ namespace MAVAppBackend.MAV
             var request = new JObject
             {
                 ["a"] = "TRAIN",
-                ["jo"] = new JObject()
+                ["jo"] = new JObject(),
+                ["request-date"] = DateTime.Now
             };
             if (trainId != null) request["jo"]["vsz"] = "55" + trainId;
             if (elviraId != null) request["jo"]["v"] = elviraId;
