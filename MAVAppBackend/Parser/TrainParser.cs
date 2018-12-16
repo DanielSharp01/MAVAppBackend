@@ -79,8 +79,10 @@ namespace MAVAppBackend.Parser
 
                         if (trainInfo == null)
                         {
-                            trainInfo = new TrainInfo(trainNumber.Value, requestDate, elviraId) { Name = name };
+                            trainInfo = new TrainInfo(trainNumber.Value, requestDate, elviraId);
                         }
+
+                        trainInfo.Name = name;
 
                         while (headerEnum.MoveNext())
                         {
@@ -182,10 +184,12 @@ namespace MAVAppBackend.Parser
             {
                 case "személyvonat": return TrainType.Local;
                 case "gyorsvonat": return TrainType.Fast;
+                case "sebesvonat": return TrainType.Fast;
                 case "InterCity": return TrainType.InterCity;
                 case "InterRégió": return TrainType.InterRegion;
                 case "EuroCity": return TrainType.EuroCity;
                 case "vonatpótló autóbusz": return TrainType.SubstitutionBus;
+                case "InterCity pótló busz": return TrainType.SubstitutionBus;
                 default: return null;
             }
         }
