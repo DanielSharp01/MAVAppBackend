@@ -28,7 +28,6 @@ namespace MAVAppBackend.Parser
             {
                 trainNumber = Helpers.ParseInt(response.Param["vsz"].ToString().Substring(2));
             }
-            // Relevant information in parameters
             if (response.Param?["v"] != null)
             {
                 elviraId = response.Param["v"].ToString();
@@ -45,12 +44,12 @@ namespace MAVAppBackend.Parser
                 document.LoadHtml(HttpUtility.HtmlDecode(response.Result?["html"].ToString()));
 
                 TrainType? type = null;
-                var table = document.DocumentNode.Descendants("table").Where(d => d.HasClass("vt")).FirstOrDefault();
+                var table = document.DocumentNode.Descendants("table").Where(d => d.HasClass("vt")).FirstOrDefault()?.ChildNodes.Where(n => n.Name == "tbody").FirstOrDefault();
                 if (table != null)
                 {
                     void setupTrainHeader()
                     {
-                        var headerRow = table.Descendants("tr").FirstOrDefault();
+                        var headerRow = table.ChildNodes.Where(n => n.Name == "tr").FirstOrDefault();
                         if (headerRow == null) return;
 
                         var headerEnum = headerRow.ChildNodes.Elements().GetEnumerator();
@@ -150,6 +149,26 @@ namespace MAVAppBackend.Parser
                             ?.Descendants("a").FirstOrDefault();
 
                     trainInfo.EstimatedExpiry = expiryDateLink == null ? (DateTime?)null : DateTime.Parse(expiryDateLink.InnerText.Split('-')[1]);
+
+                    foreach (HtmlNode tr in table.ChildNodes.Where(n => n.Name == "tr" && n.Attributes["onmouseover"] != null && n.Attributes["onmouseout"] != null))
+                    {
+                        var hit = tr.HasClass("row_past_odd") || tr.HasClass("row_past_even");
+                        var tds = tr.ChildNodes.Where(n => n.Name == "td").ToArray();
+
+                        var distance = Helpers.ParseInt(tds[0].InnerText);
+                        var stationLink = tds[1].Descendants("a").FirstOrDefault();
+                        var station = StationReference.FromScript(stationLink?.Attributes["onclick"]?.Value);
+                        if (station == null) station = new StationReference(null, stationLink?.InnerText.Trim());
+                        var arrival = TimeTuple.Parse(tds[2]);
+                        var departure = TimeTuple.Parse(tds[3]);
+                        var platform = (tds.Length > 4) ? tds[4].InnerText.Trim() : null;
+                        if (platform?.Length == 0) platform = null;
+
+                        if (station != null)
+                        {
+                            trainInfo.TrainStations.Add(new TrainStation(distance, station.Value, arrival, departure, hit, platform));
+                        }
+                    }
                 }
             }
 

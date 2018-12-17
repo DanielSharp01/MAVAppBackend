@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using MAVAppBackend.Parser;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json.Linq;
 using System;
@@ -25,11 +26,12 @@ namespace MAVAppBackend
                 Console.Clear();
 
                 //Console.WriteLine(response.Result?["html"].ToString());
-                Console.WriteLine(response.ResponseObject?.ToString());
+                Console.WriteLine(JObject.FromObject(TrainParser.Parse(response)).ToString());
+                /*Console.WriteLine(response.ResponseObject?.ToString());
                 using (StreamWriter writer = new StreamWriter("train_test_" + response.RequestObject["jo"]["vsz"].ToString().Substring(2) + ".json"))
                 {
                     writer.Write(response.ResponseObject?.ToString());
-                }
+                }*/
             }
         }
 

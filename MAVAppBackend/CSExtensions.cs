@@ -8,7 +8,7 @@ namespace MAVAppBackend
     public static class CSExtensions
     {
         /// <summary>
-        /// Substring between two character indices
+        /// Substring between two character indices (both inclusive)
         /// </summary>
         /// <param name="str">The string</param>
         /// <param name="from">Index where the substring starts (inclusive)</param>

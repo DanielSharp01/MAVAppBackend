@@ -105,21 +105,21 @@ namespace MAVAppBackend.Parser
     public struct TrainStation
     {
         /// <summary>
-        /// Distance from the beginning in kms
+        /// Distance from the beginning in kms, null if not provided
         /// </summary>
-        public int Distance { get; }
+        public int? Distance { get; }
         /// <summary>
         /// References a station by it's ID and name
         /// </summary>
         public StationReference Station { get; }
         /// <summary>
-        /// Scheduled and actual arrival time
+        /// Scheduled and actual arrival time, null if departs from here
         /// </summary>
-        public TimeTuple Arrival { get; }
+        public TimeTuple? Arrival { get; }
         /// <summary>
-        /// Scheduled and actual departure time
+        /// Scheduled and actual departure time, null if arrives to here
         /// </summary>
-        public TimeTuple Departure { get; }
+        public TimeTuple? Departure { get; }
         /// <summary>
         /// Whether this station is indicated to be hit (extremely unreliable information, never believe negatives only positives)
         /// </summary>
@@ -131,11 +131,11 @@ namespace MAVAppBackend.Parser
 
         /// <param name="distance">Distance from the beginning in kms</param>
         /// <param name="station">References a station by it's ID and name</param>
-        /// <param name="arrival">Scheduled and actual arrival time</param>
-        /// <param name="departure">Scheduled and actual departure time</param>
+        /// <param name="arrival">Scheduled and actual arrival time, null if departs from here</param>
+        /// <param name="departure">Scheduled and actual departure time, null if arrives to here</param>
         /// <param name="hit">Whether this station is indicated to be hit (extremely unreliable information, never believe negatives only positives)</param>
         /// <param name="platform">Platform that the train arrives to at that specific station, can be null if not filled (mostly not filled even when ambiguous)</param>
-        public TrainStation(int distance, StationReference station, TimeTuple arrival, TimeTuple departure, bool hit, string? platform = null)
+        public TrainStation(int? distance, StationReference station, TimeTuple? arrival, TimeTuple? departure, bool hit, string? platform = null)
         {
             Distance = distance;
             Station = station;
