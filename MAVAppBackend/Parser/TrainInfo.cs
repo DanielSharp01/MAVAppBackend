@@ -73,7 +73,7 @@ namespace MAVAppBackend.Parser
     /// <summary>
     /// From, to and which train type is used for the specific journey
     /// </summary>
-    public struct TrainRelation
+    public class TrainRelation
     {
         /// <summary>
         /// Station's name where the train starts from
@@ -102,7 +102,7 @@ namespace MAVAppBackend.Parser
     /// <summary>
     /// Information about a train station, row in the TRAIN API table
     /// </summary>
-    public struct TrainStation
+    public class TrainStation
     {
         /// <summary>
         /// Distance from the beginning in kms, null if not provided

@@ -10,8 +10,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace MAVAppBackendTest.TestData
+namespace MAVAppBackend.TestData
 {
+    /// <summary>
+    /// Test data preparation utilities for the TRAIN API
+    /// </summary>
     public static class TrainTestData
     {
         /// <summary>
@@ -31,7 +34,7 @@ namespace MAVAppBackendTest.TestData
         /// </summary>
         /// <param name="file">File to write to</param>
         /// <param name="responseObject">API response object</param>
-        public static void WriteHTMLResponse(string file, APIResponse responseObject)
+        public static void WriteHtmlResponse(string file, APIResponse responseObject)
         {
             using (StreamWriter writer = new StreamWriter(File.Open(file, FileMode.Create), Encoding.UTF8))
             {

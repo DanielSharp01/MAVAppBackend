@@ -10,7 +10,7 @@ namespace MAVAppBackend.Parser
     /// <summary>
     /// References a station by it's ID and name
     /// </summary>
-    public struct StationReference
+    public class StationReference
     {
         /// <summary>
         /// MAV's internal ID, doesn't seem to be used for anything, null if not provided (or parsing error occured)

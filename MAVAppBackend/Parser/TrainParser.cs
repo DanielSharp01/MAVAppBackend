@@ -8,7 +8,7 @@ using System.Web;
 
 namespace MAVAppBackend.Parser
 {
-    public class TrainParser
+    public static class TrainParser
     {
         /// <summary>
         /// Parses an API response from the TRAIN API
@@ -166,7 +166,7 @@ namespace MAVAppBackend.Parser
 
                         if (station != null)
                         {
-                            trainInfo.TrainStations.Add(new TrainStation(distance, station.Value, arrival, departure, hit, platform));
+                            trainInfo.TrainStations.Add(new TrainStation(distance, station, arrival, departure, hit, platform));
                         }
                     }
                 }
@@ -202,11 +202,16 @@ namespace MAVAppBackend.Parser
             switch (str)
             {
                 case "személyvonat": return TrainType.Local;
+                case "gyorsított": return TrainType.Local;
+                case "zónázó": return TrainType.Local;
                 case "gyorsvonat": return TrainType.Fast;
                 case "sebesvonat": return TrainType.Fast;
                 case "InterCity": return TrainType.InterCity;
+                case "nemz.IC": return TrainType.InterCity;
+                case "IC": return TrainType.InterCity;
                 case "InterRégió": return TrainType.InterRegion;
                 case "EuroCity": return TrainType.EuroCity;
+                case "EC": return TrainType.EuroCity;
                 case "vonatpótló autóbusz": return TrainType.SubstitutionBus;
                 case "InterCity pótló busz": return TrainType.SubstitutionBus;
                 default: return null;
