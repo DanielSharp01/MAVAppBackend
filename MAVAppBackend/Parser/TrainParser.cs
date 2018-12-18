@@ -26,7 +26,7 @@ namespace MAVAppBackend.Parser
             TrainInfo? trainInfo = null;
             if (response.Param?["vsz"] != null)
             {
-                trainNumber = Helpers.ParseInt(response.Param["vsz"].ToString().Substring(2));
+                trainNumber = CSExtensions.ParseInt(response.Param["vsz"].ToString().Substring(2));
             }
             if (response.Param?["v"] != null)
             {
@@ -58,7 +58,7 @@ namespace MAVAppBackend.Parser
                         var headerTextSplit = headerEnum.Current.InnerText.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
                         if (headerTextSplit.Length > 0)
                         {
-                            trainNumber = Helpers.ParseInt(headerTextSplit[0]);
+                            trainNumber = CSExtensions.ParseInt(headerTextSplit[0]);
                         }
                         if (trainNumber == null) return;
 
@@ -155,7 +155,7 @@ namespace MAVAppBackend.Parser
                         var hit = tr.HasClass("row_past_odd") || tr.HasClass("row_past_even");
                         var tds = tr.ChildNodes.Where(n => n.Name == "td").ToArray();
 
-                        var distance = Helpers.ParseInt(tds[0].InnerText);
+                        var distance = CSExtensions.ParseInt(tds[0].InnerText);
                         var stationLink = tds[1].Descendants("a").FirstOrDefault();
                         var station = StationReference.FromScript(stationLink?.Attributes["onclick"]?.Value);
                         if (station == null) station = new StationReference(null, stationLink?.InnerText.Trim());

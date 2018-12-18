@@ -33,7 +33,15 @@ namespace MAVAppBackend.Parser
             var nodeEnum = htmlNode.ChildNodes.ToList().GetEnumerator();
             if (!nodeEnum.MoveNext()) return null;
             if (!TimeSpan.TryParse(nodeEnum.Current.InnerText, out TimeSpan scheduled)) return null;
-            TimeSpan actual = (!nodeEnum.MoveNext() || !TimeSpan.TryParse(nodeEnum.Current.InnerText, out actual)) ? scheduled : actual;
+            TimeSpan actual = scheduled;
+            if (nodeEnum.MoveNext())
+            {
+                while (nodeEnum.Current.Name != "span" && nodeEnum.MoveNext()) ;
+                if (nodeEnum.Current != null && !TimeSpan.TryParse(nodeEnum.Current.InnerText, out actual))
+                {
+                    actual = scheduled;
+                }
+            }
             return new TimeTuple(scheduled, actual);
         }
     }

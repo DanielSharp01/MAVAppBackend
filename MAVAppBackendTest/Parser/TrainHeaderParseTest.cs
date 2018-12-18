@@ -1,20 +1,16 @@
-﻿using MAVAppBackend.MAV;
-using MAVAppBackend.Parser;
-using Newtonsoft.Json.Linq;
+﻿using MAVAppBackend.Parser;
+using MAVAppBackendTest.TestData;
 using System;
-using System.IO;
-using System.Net;
-using System.Text;
 using Xunit;
 
-namespace MAVAppBackendTest
+namespace MAVAppBackendTest.Parser
 {
-    public class TrainParseTest
+    public class TrainHeaderParseTest
     {
         [Fact]
-        public void SimpleHeaderTest()
+        public void SimpleHeader()
         {
-            var trainInfo = TrainParser.Parse(GetAPIResponseForTestFile("train_test_2008.json", new DateTime(2020, 06, 08), 2008, null));
+            var trainInfo = TrainParser.Parse(TrainTestData.GetAPIResponseForTestFile("train_test_2008.json", new DateTime(2020, 06, 08), 2008, null));
 
             Assert.NotNull(trainInfo);
             Assert.Equal(2008, trainInfo?.Number);
@@ -27,9 +23,9 @@ namespace MAVAppBackendTest
         }
 
         [Fact]
-        public void SimpleHeaderWithNameTest()
+        public void SimpleHeaderWithName()
         {
-            var trainInfo = TrainParser.Parse(GetAPIResponseForTestFile("train_test_16303.json", new DateTime(2020, 06, 08), 16303, null));
+            var trainInfo = TrainParser.Parse(TrainTestData.GetAPIResponseForTestFile("train_test_16303.json", new DateTime(2020, 06, 08), 16303, null));
 
             Assert.NotNull(trainInfo);
             Assert.Equal(16303, trainInfo?.Number);
@@ -42,9 +38,9 @@ namespace MAVAppBackendTest
         }
 
         [Fact]
-        public void ForeignHeaderTest()
+        public void ForeignHeader()
         {
-            var trainInfo = TrainParser.Parse(GetAPIResponseForTestFile("train_test_347.json", new DateTime(2020, 06, 08), 347, null));
+            var trainInfo = TrainParser.Parse(TrainTestData.GetAPIResponseForTestFile("train_test_347.json", new DateTime(2020, 06, 08), 347, null));
 
             Assert.NotNull(trainInfo);
             Assert.Equal(347, trainInfo?.Number);
@@ -57,9 +53,9 @@ namespace MAVAppBackendTest
         }
 
         [Fact]
-        public void SimpleHeaderElviraIdRequestTest()
+        public void SimpleHeaderElviraIdRequest()
         {
-            var trainInfo = TrainParser.Parse(GetAPIResponseForTestFile("train_test_2008.json", new DateTime(2020, 06, 08), null, "205484-181218"));
+            var trainInfo = TrainParser.Parse(TrainTestData.GetAPIResponseForTestFile("train_test_2008.json", new DateTime(2020, 06, 08), null, "205484-181218"));
 
             Assert.NotNull(trainInfo);
             Assert.Equal(2008, trainInfo?.Number);
@@ -73,9 +69,9 @@ namespace MAVAppBackendTest
         }
 
         [Fact]
-        public void MultiRelationHeaderTest()
+        public void MultiRelationHeader()
         {
-            var trainInfo = TrainParser.Parse(GetAPIResponseForTestFile("train_test_811.json", new DateTime(2020, 06, 08), 811, null));
+            var trainInfo = TrainParser.Parse(TrainTestData.GetAPIResponseForTestFile("train_test_811.json", new DateTime(2020, 06, 08), 811, null));
 
             Assert.NotNull(trainInfo);
             Assert.Equal(811, trainInfo?.Number);
@@ -91,35 +87,14 @@ namespace MAVAppBackendTest
         }
 
         [Fact]
-        public void ExpiryDateTest()
+        public void ExpiryDate()
         {
-            var trainInfo = TrainParser.Parse(GetAPIResponseForTestFile("train_test_568.json", new DateTime(2020, 06, 08), 568, null));
+            var trainInfo = TrainParser.Parse(TrainTestData.GetAPIResponseForTestFile("train_test_568.json", new DateTime(2020, 06, 08), 568, null));
 
             Assert.NotNull(trainInfo);
             Assert.Equal(2019, trainInfo?.EstimatedExpiry?.Year);
             Assert.Equal(2, trainInfo?.EstimatedExpiry?.Month);
             Assert.Equal(3, trainInfo?.EstimatedExpiry?.Day);
-        }
-
-        private APIResponse GetAPIResponseForTestFile(string testFile, DateTime requestDate, int? trainId, string? elviraId)
-        {
-            var request = new JObject
-            {
-                ["a"] = "TRAIN",
-                ["jo"] = new JObject(),
-                ["request-date"] = requestDate
-            };
-            if (trainId != null) request["jo"]["vsz"] = "55" + trainId;
-            if (elviraId != null) request["jo"]["v"] = elviraId;
-
-            using (StreamReader reader = new StreamReader(testFile, Encoding.UTF8))
-            {
-                var responseObject = JObject.Parse(reader.ReadToEnd());
-                if (trainId != null) responseObject["d"]["param"]["vsz"] = "55" + trainId;
-                if (elviraId != null) responseObject["d"]["param"]["v"] = elviraId;
-                
-                return new APIResponse(HttpStatusCode.OK, request, responseObject);
-            }
         }
     }
 }

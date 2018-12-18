@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,12 +39,19 @@ namespace MAVAppBackend.Parser
             if (script == null) return null;
 
             var mapGetData = script.Split(new char[] { ';' }, 2)[0];
-            var data = JObject.Parse(mapGetData.Substr(mapGetData.IndexOf("{"), mapGetData.LastIndexOf("}")));
-            var id = Helpers.ParseInt(data["i"]?.ToString());
-            var stationName = data["a"]?.ToString();
+            try
+            {
+                var data = JObject.Parse(mapGetData.Substr(mapGetData.IndexOf("{"), mapGetData.LastIndexOf("}")));
+                var id = CSExtensions.ParseInt(data["i"]?.ToString());
+                var stationName = data["a"]?.ToString();
 
-            if (stationName == null) return null;
-            return new StationReference(id, stationName);
+                if (stationName == null) return null;
+                return new StationReference(id, stationName);
+            }
+            catch (JsonReaderException)
+            {
+                return null;
+            }
         }
     }
 }
