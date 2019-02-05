@@ -1,6 +1,8 @@
 ﻿using HtmlAgilityPack;
 using MAVAppBackend.MAV;
+using MAVAppBackend.Parser.Statements;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,16 +16,15 @@ namespace MAVAppBackend.Parser
         /// Parses an API response from the TRAIN API
         /// </summary>
         /// <param name="response">API response to parse</param>
-        /// <returns>Parsed information or null if the parsing can not even determine the train number</returns>
-        public static TrainInfo? Parse(APIResponse response)
+        /// <returns>Parser statements</returns>
+        public static IEnumerable<ParserStatement> Parse(APIResponse response)
         {
-            if (!response.RequestSucceded) return null;
+            if (!response.RequestSucceded) yield return new ErrorStatement(response, ErrorTypes.RequestUnsuccessful);
 
             int? trainNumber = null;
             string? elviraId = null;
-            DateTime requestDate = response.RequestObject["request-date"].ToObject<DateTime>();
+            TrainIdentification? id = null;
 
-            TrainInfo? trainInfo = null;
             if (response.Param?["vsz"] != null)
             {
                 trainNumber = CSExtensions.ParseInt(response.Param["vsz"].ToString().Substring(2));
@@ -35,7 +36,7 @@ namespace MAVAppBackend.Parser
 
             if (trainNumber != null)
             {
-                trainInfo = new TrainInfo(trainNumber.Value, requestDate, elviraId);
+                yield return id = new TrainIdentification(response, trainNumber.Value, elviraId);
             }
 
             if (response.Result?["html"] != null)
@@ -43,141 +44,218 @@ namespace MAVAppBackend.Parser
                 HtmlDocument document = new HtmlDocument();
                 document.LoadHtml(HttpUtility.HtmlDecode(response.Result?["html"].ToString()));
 
-                TrainType? type = null;
                 var table = document.DocumentNode.Descendants("table").Where(d => d.HasClass("vt")).FirstOrDefault()?.ChildNodes.Where(n => n.Name == "tbody").FirstOrDefault();
                 if (table != null)
                 {
-                    void setupTrainHeader()
+                    foreach (ParserStatement statement in ProcessHeader(response, table, ref id, elviraId))
                     {
-                        var headerRow = table.ChildNodes.Where(n => n.Name == "tr").FirstOrDefault();
-                        if (headerRow == null) return;
+                        yield return statement;
+                    }
 
-                        var headerEnum = headerRow.ChildNodes.Elements().GetEnumerator();
-                        if (!headerEnum.MoveNext()) return;
+                    if (id != null)
+                    {
+                        var expiryDateLink = document.DocumentNode.FirstChild.ChildNodes.SkipWhile(h => h.InnerText.Trim() != "Menetrend").SkipWhile(ul => ul.Name != "ul").FirstOrDefault()?.Descendants("li")
+                                .FirstOrDefault(li => li.Attributes.Contains("style") && li.Attributes["style"].Value.Contains("bolder"))
+                                ?.Descendants("a").FirstOrDefault();
 
-                        var headerTextSplit = headerEnum.Current.InnerText.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
-                        if (headerTextSplit.Length > 0)
+                        yield return new TrainExpiry(response, id, expiryDateLink == null ? (DateTime?)null : DateTime.Parse(expiryDateLink.InnerText.Split('-')[1]));
+
+                        StationIdentification? lastStation = null;
+                        foreach (HtmlNode tr in table.ChildNodes.Where(n => n.Name == "tr" && n.Attributes["onmouseover"] != null && n.Attributes["onmouseout"] != null))
                         {
-                            trainNumber = CSExtensions.ParseInt(headerTextSplit[0]);
-                        }
-                        if (trainNumber == null) return;
-
-                        string? name = null;
-                        for (int i = 1; i < headerTextSplit.Length; i++)
-                        {
-                            if ((type = DetermineTrainType(headerTextSplit[i])) != null)
+                            foreach (ParserStatement statement in ProcessStationTableRow(response, tr, id, ref lastStation))
                             {
-                                break;
-                            }
-                            else
-                            {
-                                if (name == null) name = headerTextSplit[i];
-                                else name += " " + headerTextSplit[i];
-                            }
-                        }
-
-                        if (trainInfo == null)
-                        {
-                            trainInfo = new TrainInfo(trainNumber.Value, requestDate, elviraId);
-                        }
-
-                        trainInfo.Name = name;
-
-                        while (headerEnum.MoveNext())
-                        {
-                            TrainType? detType = DetermineTrainType(headerEnum.Current);
-
-                            if (detType != null)
-                            {
-                                if (type != null)
-                                {
-                                    type = detType;
-                                }
-                            }
-                            else if (headerEnum.Current.Name == "span" && headerEnum.Current.HasClass("viszszam2"))
-                            {
-                                trainInfo.ViszNumber = headerEnum.Current.InnerText;
-                            }
-                            else if (headerEnum.Current.Name == "font")
-                            {
-                                var relationText = headerEnum.Current.InnerText.Substr(1, -1).Split(',')[0].Trim();
-                                var stationNames = relationText.Split(" - ").Select(s => s.Trim()).ToArray();
-                                if (type != null)
-                                {
-                                    trainInfo.TrainRelations.Add(new TrainRelation(stationNames[0], stationNames[1], type.Value));
-                                }
-                            }
-                            else if (headerEnum.Current.Name == "ul")
-                            {
-                                foreach (HtmlNode li in headerEnum.Current.ChildNodes.Where(n => n.Name == "li"))
-                                {
-                                    var liEnum = li.ChildNodes.AsEnumerable().GetEnumerator();
-                                    string? fromStation = null, toStation = null;
-                                    TrainType? relType = null;
-                                    if (liEnum.MoveNext())
-                                    {
-                                        var text = liEnum.Current.InnerText.Trim();
-                                        var colonSplit = text.Split(':');
-                                        var relationSplit = colonSplit[0].Split(" - ");
-                                        fromStation = relationSplit[0].Trim();
-                                        toStation = relationSplit[1].Trim();
-                                        relType = DetermineTrainType(colonSplit[1].Trim());
-                                    }
-                                    if (liEnum.MoveNext())
-                                    {
-                                        if (liEnum.Current.Name == "img")
-                                        {
-                                            relType = DetermineTrainType(liEnum.Current);
-                                        }
-                                    }
-
-                                    if (fromStation != null && toStation != null && relType != null)
-                                    {
-                                        trainInfo.TrainRelations.Add(new TrainRelation(fromStation, toStation, relType.Value));
-                                    }
-                                }
+                                yield return statement;
                             }
                         }
                     }
-                    setupTrainHeader();
-                    
-                    if (trainInfo == null)
-                        return null;
+                }
+                else yield return new ErrorStatement(response, ErrorTypes.NoTable);
+            }
+            else yield return new ErrorStatement(response, ErrorTypes.NoHtml);
 
-                    var expiryDateLink = document.DocumentNode.FirstChild.ChildNodes.SkipWhile(h => h.InnerText.Trim() != "Menetrend").SkipWhile(ul => ul.Name != "ul").FirstOrDefault()?.Descendants("li")
-                            .FirstOrDefault(li => li.Attributes.Contains("style") && li.Attributes["style"].Value.Contains("bolder"))
-                            ?.Descendants("a").FirstOrDefault();
+            if (id != null && response.Result?["line"][0]["points"] != null)
+            {
+                yield return new TrainPolyline(response, id, response.Result?["line"][0]["points"]?.ToString());
+            }
+        }
 
-                    trainInfo.EstimatedExpiry = expiryDateLink == null ? (DateTime?)null : DateTime.Parse(expiryDateLink.InnerText.Split('-')[1]);
+        /// <summary>
+        /// Processes the train header part of the HTML response
+        /// </summary>
+        /// <param name="response">API response</param>
+        /// <param name="table">Table HtmlNode</param>
+        /// <param name="id">Identifies the train</param>
+        /// <param name="elviraId"></param>
+        /// <returns>List of parser statements</returns>
+        private static List<ParserStatement> ProcessHeader(APIResponse response, HtmlNode table, ref TrainIdentification? id, string? elviraId)
+        {
+            List<ParserStatement> ret = new List<ParserStatement>();
+            TrainType? type = null;
+            var headerRow = table.ChildNodes.Where(n => n.Name == "tr").FirstOrDefault();
+            if (headerRow == null)
+            {
+                ret.Add(new ErrorStatement(response, ErrorTypes.NoTableRows));
+                return ret;
+            }
 
-                    foreach (HtmlNode tr in table.ChildNodes.Where(n => n.Name == "tr" && n.Attributes["onmouseover"] != null && n.Attributes["onmouseout"] != null))
+            var headerEnum = headerRow.ChildNodes.Elements().GetEnumerator();
+            if (!headerEnum.MoveNext())
+            {
+                ret.Add(new ErrorStatement(response, ErrorTypes.HeaderEmpty));
+                return ret;
+            }
+
+            var headerTextSplit = headerEnum.Current.InnerText.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+            if (id == null)
+            {
+                int? trainNumber = null;
+                if (headerTextSplit.Length > 0)
+                {
+                    trainNumber = CSExtensions.ParseInt(headerTextSplit[0]);
+                }
+
+                if (trainNumber != null)
+                {
+                    ret.Add(id = new TrainIdentification(response, trainNumber.Value, elviraId));
+                }
+                else
+                {
+                    ret.Add(new ErrorStatement(response, ErrorTypes.NoTrainIdentification));
+                }
+            }
+
+            if (id == null) return ret;
+
+            string? name = null;
+            for (int i = 1; i < headerTextSplit.Length; i++)
+            {
+                if ((type = DetermineTrainType(headerTextSplit[i])) != null)
+                {
+                    break;
+                }
+                else
+                {
+                    if (name == null) name = headerTextSplit[i];
+                    else name += " " + headerTextSplit[i];
+                }
+            }
+
+            ret.Add(new TrainName(response, id, name));
+
+            while (headerEnum.MoveNext())
+            {
+                TrainType? detType = DetermineTrainType(headerEnum.Current);
+
+                if (detType != null)
+                {
+                    if (type != null)
                     {
-                        var hit = tr.HasClass("row_past_odd") || tr.HasClass("row_past_even");
-                        var tds = tr.ChildNodes.Where(n => n.Name == "td").ToArray();
-
-                        var distance = CSExtensions.ParseInt(tds[0].InnerText);
-                        var stationLink = tds[1].Descendants("a").FirstOrDefault();
-                        var station = StationReference.FromScript(stationLink?.Attributes["onclick"]?.Value);
-                        if (station == null) station = new StationReference(null, stationLink?.InnerText.Trim());
-                        var arrival = TimeTuple.Parse(tds[2]);
-                        var departure = TimeTuple.Parse(tds[3]);
-                        var platform = (tds.Length > 4) ? tds[4].InnerText.Trim() : null;
-                        if (platform?.Length == 0) platform = null;
-
-                        if (station != null)
+                        type = detType;
+                    }
+                }
+                else if (headerEnum.Current.Name == "span" && headerEnum.Current.HasClass("viszszam2"))
+                {
+                    ret.Add(new TrainVisz(response, id, headerEnum.Current.InnerText));
+                }
+                else if (headerEnum.Current.Name == "font")
+                {
+                    var relationText = headerEnum.Current.InnerText.Substr(1, -1).Split(',')[0].Trim();
+                    var stationNames = relationText.Split(" - ").Select(s => s.Trim()).ToArray();
+                    if (type != null)
+                    {
+                        var from = new StationIdentification(response, stationNames[0], null);
+                        var to = new StationIdentification(response, stationNames[1], null);
+                        ret.Add(from);
+                        ret.Add(to);
+                        ret.Add(new TrainRelation(response, id, from, to, type.Value));
+                    }
+                }
+                else if (headerEnum.Current.Name == "ul")
+                {
+                    foreach (HtmlNode li in headerEnum.Current.ChildNodes.Where(n => n.Name == "li"))
+                    {
+                        var liEnum = li.ChildNodes.AsEnumerable().GetEnumerator();
+                        string? fromStation = null, toStation = null;
+                        TrainType? relType = null;
+                        if (liEnum.MoveNext())
                         {
-                            trainInfo.TrainStations.Add(new TrainStation(distance, station, arrival, departure, hit, platform));
+                            var text = liEnum.Current.InnerText.Trim();
+                            var colonSplit = text.Split(':');
+                            var relationSplit = colonSplit[0].Split(" - ");
+                            fromStation = relationSplit[0].Trim();
+                            toStation = relationSplit[1].Trim();
+                            relType = DetermineTrainType(colonSplit[1].Trim());
+                        }
+                        if (liEnum.MoveNext())
+                        {
+                            if (liEnum.Current.Name == "img")
+                            {
+                                relType = DetermineTrainType(liEnum.Current);
+                            }
+                        }
+
+                        if (fromStation != null && toStation != null && relType != null)
+                        {
+                            var from = new StationIdentification(response, fromStation, null);
+                            var to = new StationIdentification(response, toStation, null);
+                            ret.Add(from);
+                            ret.Add(to);
+                            ret.Add(new TrainRelation(response, id, from, to, relType.Value));
                         }
                     }
                 }
             }
 
-            if (trainInfo != null)
+            return ret;
+        }
+
+        /// <summary>
+        /// Processes the station rows in the HTML response
+        /// </summary>
+        /// <param name="response">API response</param>
+        /// <param name="row">Station row tr</param>
+        /// <param name="number">Number of the train station (ordinal)</param>
+        /// <param name="id">Identifies the train</param>
+        /// <param name="lastStation">Last station (to link sequential stations together)</param>
+        /// <returns>Parser statements</returns>
+        private static List<ParserStatement> ProcessStationTableRow(APIResponse response, HtmlNode row, TrainIdentification id, ref StationIdentification? lastStation)
+        {
+            List<ParserStatement> ret = new List<ParserStatement>();
+            var tds = row.ChildNodes.Where(n => n.Name == "td").ToArray();
+            var stationLink = tds[1].Descendants("a").FirstOrDefault();
+            var stationId = StationIdentification.FromScript(response, stationLink?.Attributes["onclick"]?.Value);
+            if (stationId != null)
             {
-                trainInfo.EncodedPolyline = response.Result?["line"][0]["points"]?.ToString();
+                ret.Add(stationId);
+            }
+            else
+            {
+                ret.Add(new ErrorStatement(response, ErrorTypes.StationLinkUnparsable));
+                ret.Add(stationId = new StationIdentification(response, stationLink?.InnerText.Trim(), null));
             }
 
-            return trainInfo;
+            var hit = row.HasClass("row_past_odd") || row.HasClass("row_past_even");
+            var distance = CSExtensions.ParseInt(tds[0].InnerText);
+            var arrival = TimeTuple.Parse(tds[2]);
+            var departure = TimeTuple.Parse(tds[3]);
+            var platform = (tds.Length > 4) ? tds[4].InnerText.Trim() : null;
+            if (platform?.Length == 0) platform = null;
+
+            var trainStationId = new TrainStation(response, id, stationId, arrival, departure);
+            ret.Add(trainStationId);
+            if (lastStation != null)
+            {
+                ret.Add(new TrainStationLink(response, id, lastStation, stationId, true));
+            }
+
+            lastStation = stationId;
+
+            ret.Add(new TrainStationDistance(response, trainStationId, distance));
+            ret.Add(new TrainStationPlatform(response, trainStationId, platform));
+            ret.Add(new TrainStationHit(response, trainStationId, hit));
+
+            return ret;
         }
 
         /// <summary>
