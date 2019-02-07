@@ -43,7 +43,7 @@ namespace MAVAppBackend.Parser
                         var arrival = TimeTuple.Parse(tds[0]);
                         var departure = TimeTuple.Parse(tds[1]);
                         var trainReference = tds[tds.Length > 3 ? 3 : 2];
-                        var trainRefStatements = ParseTrainReference(response, trainReference).ToList();
+                        var trainRefStatements = ParseTrainReference(response, trainReference, stationId, arrival?.Scheduled, departure?.Scheduled).ToList();
 
                         foreach (var s in trainRefStatements)
                         {
@@ -64,7 +64,7 @@ namespace MAVAppBackend.Parser
             else yield return new ErrorStatement(response, ErrorTypes.NoHtml);
         }
 
-        public static IEnumerable<ParserStatement> ParseTrainReference(APIResponse response, HtmlNode trainReference)
+        public static IEnumerable<ParserStatement> ParseTrainReference(APIResponse response, HtmlNode trainReference, StationIdentification station, TimeSpan? arrival, TimeSpan? departure)
         {
             var enumerator = trainReference.ChildNodes.AsEnumerable().GetEnumerator();
             TrainIdentification id;
@@ -99,7 +99,27 @@ namespace MAVAppBackend.Parser
 
             if (enumerator.MoveNext())
             {
-                var type = TrainParser.DetermineTrainType(enumerator.Current.InnerText.Trim());
+                var textSplit = enumerator.Current.InnerText.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+                string? name = null;
+                TrainType? type = null;
+                foreach (var part in textSplit)
+                {
+                    if ((type = TrainParser.DetermineTrainType(part)) != null)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if (name == null) name = part;
+                        else name += " " + part;
+                    }
+                }
+
+                if (name != null)
+                {
+                    yield return new TrainName(response, id, name);
+                }
+
                 if (type != null)
                 {
                     yield return new TrainHasType(response, id, type.Value);
@@ -114,15 +134,34 @@ namespace MAVAppBackend.Parser
             {
                 var text = enumerator.Current.InnerText;
                 var parts = text.Split(" -- ");
-                var p0 = parts[0].Split((char)160);
-                var p1 = parts[1].Split((char)160);
+                parts[0] = parts[0].Trim();
+                parts[1] = parts[1].Trim();
 
-                if (TimeSpan.TryParse(p0[0].Trim(), out TimeSpan fromTime) && TimeSpan.TryParse(p1[1].Trim(), out TimeSpan toTime))
+                if (parts[0] == "" && parts[1] == "")
                 {
-                    var from = new StationIdentification(response, p0[1].Trim(), null);
-                    var to = new StationIdentification(response, p1[0].Trim(), null);
-                    yield return new TrainRelation(response, id, from, to, fromTime, toTime);
+                    yield return new ErrorStatement(response, ErrorTypes.TrainRelationUnparsable);
+                    yield break;
                 }
+
+                var p0 = parts[0].Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+                var p1 = parts[1].Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts[0] != "") departure = null;
+                if (parts[1] != "") arrival = null;
+
+                if (departure == null && TimeSpan.TryParse(p0[0].Trim(), out TimeSpan fromTime))
+                {
+                    departure = fromTime;
+                }
+
+                if (arrival == null && TimeSpan.TryParse(p1[1].Trim(), out TimeSpan toTime))
+                {
+                    arrival = toTime;
+                }
+
+                var from = parts[0] != "" ? new StationIdentification(response, p0[1].Trim(), null) : station;
+                var to = parts[1] != "" ? new StationIdentification(response, p1[0].Trim(), null) : station;
+                yield return new TrainRelation(response, id, from, to, departure, arrival);
             }
         }
 

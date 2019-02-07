@@ -18,7 +18,8 @@ namespace MAVAppBackend.Parser.Statements
         HeaderEmpty,
         NoTrainIdentification,
         StationLinkUnparsable,
-        TrainReferenceUnparsable
+        TrainReferenceUnparsable,
+        TrainRelationUnparsable
     }
 
     /// <summary>
