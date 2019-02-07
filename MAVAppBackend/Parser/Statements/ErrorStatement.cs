@@ -12,7 +12,7 @@ namespace MAVAppBackend.Parser.Statements
     public enum ErrorTypes
     {
         RequestUnsuccessful,
-        NoHtml,
+        NoResult,
         NoTable,
         NoTableRows,
         HeaderEmpty,

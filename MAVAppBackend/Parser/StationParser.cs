@@ -17,7 +17,7 @@ namespace MAVAppBackend.Parser
         /// Parses an API response from the STATION API
         /// </summary>
         /// <param name="response">API response to parse</param>
-        /// <returns>Parsed information or null if the request failed</returns>
+        /// <returns>IEnumerable of ParserStatements</returns>
         public static IEnumerable<ParserStatement> Parse(APIResponse response)
         {
             if (!response.RequestSucceded)
@@ -61,7 +61,7 @@ namespace MAVAppBackend.Parser
                 }
                 else yield return new ErrorStatement(response, ErrorTypes.NoTable);
             }
-            else yield return new ErrorStatement(response, ErrorTypes.NoHtml);
+            else yield return new ErrorStatement(response, ErrorTypes.NoResult);
         }
 
         public static IEnumerable<ParserStatement> ParseTrainReference(APIResponse response, HtmlNode trainReference, StationIdentification station, TimeSpan? arrival, TimeSpan? departure)

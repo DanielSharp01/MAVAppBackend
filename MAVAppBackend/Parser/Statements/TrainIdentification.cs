@@ -15,7 +15,7 @@ namespace MAVAppBackend.Parser.Statements
         /// <summary>
         /// Unique number of the train (more like a train class id)
         /// </summary>
-        public int Number { get; }
+        public int? Number { get; }
         /// <summary>
         /// Unique id of the train instance (more like a train instance id)
         /// </summary>
@@ -24,7 +24,7 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="number">Unique number of the train (more like a train class id)</param>
         /// <param name="elviraID">Unique id of the train instance (more like a train instance id)</param>
-        public TrainIdentification(APIResponse origin, int number, string? elviraID)
+        public TrainIdentification(APIResponse origin, int? number, string? elviraID)
             : base(origin)
         {
             Number = number;

@@ -20,13 +20,13 @@ namespace MAVAppBackend
             {
                 var response = Task.Run(async () =>
                 {
-                    //return await new MAV.TrainsAPIRequest().GetResponse();
+                    return await new MAV.TrainsAPIRequest().GetResponse();
                     //return await new MAV.TrainAPIRequest(trainId: int.Parse(Console.ReadLine())).GetResponse();
-                    return await new MAV.StationAPIRequest(Console.ReadLine()).GetResponse();
+                    //return await new MAV.StationAPIRequest(Console.ReadLine()).GetResponse();
                     //return await new MAV.RouteAPIRequest(Console.ReadLine(), Console.ReadLine()).GetResponse();
                 }).GetAwaiter().GetResult();
 
-                var list = StationParser.Parse(response).ToList();
+                var list = TrainsParser.Parse(response).ToList();
                 Console.Clear();
             }
         }
