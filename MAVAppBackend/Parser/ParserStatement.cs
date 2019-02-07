@@ -21,10 +21,5 @@ namespace MAVAppBackend.Parser
         {
             Origin = origin;
         }
-
-        public virtual IEnumerable<ParserStatement> GetSpawnedStatements()
-        {
-            yield break;
-        }
     }
 }

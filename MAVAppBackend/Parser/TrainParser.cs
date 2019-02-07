@@ -19,7 +19,11 @@ namespace MAVAppBackend.Parser
         /// <returns>Parser statements</returns>
         public static IEnumerable<ParserStatement> Parse(APIResponse response)
         {
-            if (!response.RequestSucceded) yield return new ErrorStatement(response, ErrorTypes.RequestUnsuccessful);
+            if (!response.RequestSucceded)
+            {
+                yield return new ErrorStatement(response, ErrorTypes.RequestUnsuccessful);
+                yield break;
+            }
 
             int? trainNumber = null;
             string? elviraId = null;
@@ -162,17 +166,22 @@ namespace MAVAppBackend.Parser
                 {
                     var relationText = headerEnum.Current.InnerText.Substr(1, -1).Split(',')[0].Trim();
                     var stationNames = relationText.Split(" - ").Select(s => s.Trim()).ToArray();
+                    
+                    var from = new StationIdentification(response, stationNames[0], null);
+                    var to = new StationIdentification(response, stationNames[1], null);
+                    ret.Add(from);
+                    ret.Add(to);
+                    ret.Add(new TrainRelation(response, id, from, to));
+
                     if (type != null)
                     {
-                        var from = new StationIdentification(response, stationNames[0], null);
-                        var to = new StationIdentification(response, stationNames[1], null);
-                        ret.Add(from);
-                        ret.Add(to);
-                        ret.Add(new TrainRelation(response, id, from, to, type.Value));
+                        ret.Add(new TrainHasType(response, id, type.Value));
                     }
                 }
                 else if (headerEnum.Current.Name == "ul")
                 {
+                    StationIdentification? firstFrom = null;
+                    StationIdentification? lastTo = null;
                     foreach (HtmlNode li in headerEnum.Current.ChildNodes.Where(n => n.Name == "li"))
                     {
                         var liEnum = li.ChildNodes.AsEnumerable().GetEnumerator();
@@ -194,15 +203,21 @@ namespace MAVAppBackend.Parser
                                 relType = DetermineTrainType(liEnum.Current);
                             }
                         }
-
                         if (fromStation != null && toStation != null && relType != null)
                         {
                             var from = new StationIdentification(response, fromStation, null);
+                            if (firstFrom != null) firstFrom = from;
                             var to = new StationIdentification(response, toStation, null);
+                            lastTo = to;
                             ret.Add(from);
                             ret.Add(to);
-                            ret.Add(new TrainRelation(response, id, from, to, relType.Value));
+                            ret.Add(new TrainSubrelation(response, id, from, to, relType.Value));
                         }
+                    }
+
+                    if (firstFrom != null && lastTo != null)
+                    {
+                        ret.Add(new TrainRelation(response, id, firstFrom, lastTo));
                     }
                 }
             }
@@ -277,21 +292,24 @@ namespace MAVAppBackend.Parser
         /// <returns>Train type determined or null if the string does not refer to a train type</returns>
         public static TrainType? DetermineTrainType(string str)
         {
-            switch (str)
+            switch (str.ToLower())
             {
                 case "személyvonat": return TrainType.Local;
+                case "személy": return TrainType.Local;
                 case "gyorsított": return TrainType.Local;
                 case "zónázó": return TrainType.Local;
                 case "gyorsvonat": return TrainType.Fast;
                 case "sebesvonat": return TrainType.Fast;
+                case "sebes": return TrainType.Fast;
+                case "gyors": return TrainType.Fast;
                 case "InterCity": return TrainType.InterCity;
-                case "nemz.IC": return TrainType.InterCity;
-                case "IC": return TrainType.InterCity;
-                case "InterRégió": return TrainType.InterRegion;
-                case "EuroCity": return TrainType.EuroCity;
-                case "EC": return TrainType.EuroCity;
+                case "nemz.ic": return TrainType.InterCity;
+                case "ic": return TrainType.InterCity;
+                case "interrégió": return TrainType.InterRegion;
+                case "eurocity": return TrainType.EuroCity;
+                case "ec": return TrainType.EuroCity;
                 case "vonatpótló autóbusz": return TrainType.SubstitutionBus;
-                case "InterCity pótló busz": return TrainType.SubstitutionBus;
+                case "intercity pótló busz": return TrainType.SubstitutionBus;
                 default: return null;
             }
         }
