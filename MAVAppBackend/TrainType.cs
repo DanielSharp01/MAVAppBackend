@@ -1,4 +1,4 @@
-﻿namespace MAVAppBackend.Parser
+﻿namespace MAVAppBackend
 {
     /// <summary>
     /// Type of the train

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MAVAppBackend.Parser
+namespace MAVAppBackend
 {
     /// <summary>
     /// Something that the Parser states after processing an API response
