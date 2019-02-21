@@ -39,5 +39,10 @@ namespace MAVAppBackend.Parser.Statements
         {
             ErrorType = errorType;
         }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            // TODO: Log
+        }
     }
 }

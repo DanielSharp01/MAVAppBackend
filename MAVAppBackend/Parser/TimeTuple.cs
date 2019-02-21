@@ -18,11 +18,11 @@ namespace MAVAppBackend.Parser
         /// <summary>
         /// Actual time (including delays, should not neccesarily be used to determine it though)
         /// </summary>
-        public TimeSpan Actual { get; }
+        public TimeSpan? Actual { get; }
 
         /// <param name="scheduled">Scheduled time</param>
         /// <param name="actual">Actual time (including delays, should not neccesarily be used to determine it though)</param>
-        public TimeTuple(TimeSpan scheduled, TimeSpan actual)
+        public TimeTuple(TimeSpan scheduled, TimeSpan? actual)
         {
             Scheduled = scheduled;
             Actual = actual;

@@ -9,12 +9,12 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Tells the path of a train
     /// </summary>
-    public class TrainPolyline : ParserStatement
+    public class TrainPolylineStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train
         /// </summary>
-        public TrainIdentification Id { get; }
+        public TrainIdStatement Id { get; }
 
         /// <summary>
         /// Encoded polyline of the train path (google maps encoding)
@@ -24,11 +24,19 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="id">Identifies the train</param>
         /// <param name="encodedPolyline">Encoded polyline of the train path (google maps encoding)</param>
-        public TrainPolyline(APIResponse origin, TrainIdentification id, string encodedPolyline)
+        public TrainPolylineStatement(APIResponse origin, TrainIdStatement id, string encodedPolyline)
             : base(origin)
         {
             Id = id;
             EncodedPolyline = encodedPolyline;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (Id.DbTrain == null) return;
+
+            if (Id.DbTrain.EncodedPolyline == null)
+                Id.DbTrain.EncodedPolyline = EncodedPolyline;
         }
     }
 }

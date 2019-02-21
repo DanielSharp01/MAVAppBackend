@@ -3,14 +3,16 @@ using System;
 using MAVAppBackend;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MAVAppBackend.Migrations
 {
     [DbContext(typeof(AppContext))]
-    partial class AppContextModelSnapshot : ModelSnapshot
+    [Migration("20190218154934_indices-added")]
+    partial class indicesadded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,27 +53,13 @@ namespace MAVAppBackend.Migrations
 
                     b.Property<DateTime>("ExpiryDate");
 
-                    b.Property<int?>("FromId");
-
                     b.Property<bool>("FullKnowledge");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(255);
-
-                    b.Property<int?>("ToId");
 
                     b.Property<int>("TrainNumber");
 
                     b.Property<int?>("Type");
 
-                    b.Property<string>("ViszNumber")
-                        .HasMaxLength(16);
-
                     b.HasKey("Id");
-
-                    b.HasIndex("FromId");
-
-                    b.HasIndex("ToId");
 
                     b.HasIndex("TrainNumber")
                         .IsUnique();
@@ -119,11 +107,6 @@ namespace MAVAppBackend.Migrations
 
                     b.Property<double?>("Distance");
 
-                    b.Property<int?>("IntDistance");
-
-                    b.Property<string>("Platform")
-                        .HasMaxLength(16);
-
                     b.Property<int>("StationId");
 
                     b.Property<int>("TrainId");
@@ -158,17 +141,6 @@ namespace MAVAppBackend.Migrations
                     b.HasIndex("TrainId");
 
                     b.ToTable("TrainStationLinks");
-                });
-
-            modelBuilder.Entity("MAVAppBackend.Entities.Train", b =>
-                {
-                    b.HasOne("MAVAppBackend.Entities.Station", "From")
-                        .WithMany()
-                        .HasForeignKey("FromId");
-
-                    b.HasOne("MAVAppBackend.Entities.Station", "To")
-                        .WithMany()
-                        .HasForeignKey("ToId");
                 });
 
             modelBuilder.Entity("MAVAppBackend.Entities.TrainInstance", b =>

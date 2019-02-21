@@ -9,12 +9,12 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Tells the visz (it stands for something in Hungarian) number of a train
     /// </summary>
-    public class TrainVisz : ParserStatement
+    public class TrainViszStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train
         /// </summary>
-        public TrainIdentification Id { get; }
+        public TrainIdStatement Id { get; }
 
         /// <summary>
         /// Visz number of the train
@@ -24,11 +24,18 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="id">Identifies the train</param>
         /// <param name="viszNumber"> Visz number of the train</param>
-        public TrainVisz(APIResponse origin, TrainIdentification id, string? viszNumber)
+        public TrainViszStatement(APIResponse origin, TrainIdStatement id, string? viszNumber)
             : base(origin)
         {
             Id = id;
             ViszNumber = viszNumber;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (Id.DbTrain == null) return;
+
+            Id.DbTrain.ViszNumber = ViszNumber;
         }
     }
 }

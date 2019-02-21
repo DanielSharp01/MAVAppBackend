@@ -9,12 +9,12 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Tells how much a train is delayed coming from the dynamic TRAINS API
     /// </summary>
-    public class TrainDelay : ParserStatement
+    public class TrainDelayStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train
         /// </summary>
-        public TrainIdentification Id { get; }
+        public TrainIdStatement Id { get; }
 
         /// <summary>
         /// Delay in minutes
@@ -24,11 +24,18 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="id">Identifies the train</param>
         /// <param name="delay">Delay in minutes</param>
-        public TrainDelay(APIResponse origin, TrainIdentification id, int delay)
+        public TrainDelayStatement(APIResponse origin, TrainIdStatement id, int delay)
             : base(origin)
         {
             Id = id;
             Delay = delay;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (Id.DbTrainInstance == null) return;
+
+            Id.DbTrainInstance.Delay = Delay;
         }
     }
 }

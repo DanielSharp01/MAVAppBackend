@@ -9,12 +9,12 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Tells which platform the train arrives to (and/or departs from)
     /// </summary>
-    public class TrainStationPlatform : ParserStatement
+    public class TrainStationPlatformStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train and its station
         /// </summary>
-        public TrainStation TrainStationId { get; }
+        public TrainStationStatement Id { get; }
 
         /// <summary>
         /// Platform where the train arrives (can be null if not known or there aren't multiple platforms in the direction)
@@ -24,11 +24,18 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="trainStationId">Identifies the train and its station</param>
         /// <param name="platform">Platform where the train arrives (can be null if not known or there aren't multiple platforms in the direction)</param>
-        public TrainStationPlatform(APIResponse origin, TrainStation trainStationId, string? platform)
+        public TrainStationPlatformStatement(APIResponse origin, TrainStationStatement trainStationId, string? platform)
             : base(origin)
         {
-            TrainStationId = trainStationId;
+            Id = trainStationId;
             Platform = platform;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (Id.DbTrainStation == null) return;
+
+            Id.DbTrainStation.Platform = Platform;
         }
     }
 }

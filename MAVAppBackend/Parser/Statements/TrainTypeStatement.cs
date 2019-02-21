@@ -9,12 +9,12 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Indicates that the train has a specific type
     /// </summary>
-    public class TrainHasType : ParserStatement
+    public class TrainTypeStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train
         /// </summary>
-        public TrainIdentification Id { get; }
+        public TrainIdStatement Id { get; }
 
         /// <summary>
         /// Type of the train
@@ -24,11 +24,18 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="id">Identifies the train</param>
         /// <param name="type">Type of the train</param>
-        public TrainHasType(APIResponse origin, TrainIdentification id, TrainType type)
+        public TrainTypeStatement(APIResponse origin, TrainIdStatement id, TrainType type)
             : base(origin)
         {
             Id = id;
             Type = type;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (Id.DbTrain == null) return;
+
+            Id.DbTrain.Type = Type;
         }
     }
 }

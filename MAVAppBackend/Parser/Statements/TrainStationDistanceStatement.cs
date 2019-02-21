@@ -9,12 +9,12 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Tells the distance from the start of the train journey
     /// </summary>
-    public class TrainStationDistance : ParserStatement
+    public class TrainStationDistanceStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train and its station
         /// </summary>
-        public TrainStation TrainStationId { get; }
+        public TrainStationStatement Id { get; }
 
         /// <summary>
         /// Distance from the start (in kms), null when the station is not domestic (or otherwise not known)
@@ -24,11 +24,18 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="trainStationId">Identifies the train and its station</param>
         /// <param name="distance">Distance from the start (in kms), null when the station is not domestic (or otherwise not known)</param>
-        public TrainStationDistance(APIResponse origin, TrainStation trainStationId, int? distance)
+        public TrainStationDistanceStatement(APIResponse origin, TrainStationStatement trainStationId, int? distance)
             : base(origin)
         {
-            TrainStationId = trainStationId;
+            Id = trainStationId;
             Distance = distance;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (Id.DbTrainStation == null) return;
+
+            Id.DbTrainStation.IntDistance = Distance;
         }
     }
 }

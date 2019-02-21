@@ -7,28 +7,35 @@ using MAVAppBackend.MAV;
 namespace MAVAppBackend.Parser.Statements
 {
     /// <summary>
-    /// Tells when the data for this train expires
+    /// Tells the train's name
     /// </summary>
-    public class TrainExpiry : ParserStatement
+    public class TrainNameStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train
         /// </summary>
-        public TrainIdentification Id { get; }
+        public TrainIdStatement Id { get; }
 
         /// <summary>
-        /// Expiry date of the data for this train (null indicates good until the end of this year probably)
+        /// Name of the train
         /// </summary>
-        public DateTime? ExpiryDate { get; }
+        public string? Name { get; }
 
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="id">Identifies the train</param>
-        /// <param name="expiryDate">Expiry date of the data for this train</param>
-        public TrainExpiry(APIResponse origin, TrainIdentification id, DateTime? expiryDate)
+        /// <param name="name">Name of the train</param>
+        public TrainNameStatement(APIResponse origin, TrainIdStatement id, string? name)
             : base(origin)
         {
             Id = id;
-            ExpiryDate = expiryDate;
+            Name = name;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (Id.DbTrain == null) return;
+
+            Id.DbTrain.Name = Name;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using MAVAppBackend.MAV;
+﻿using MAVAppBackend.Entities;
+using MAVAppBackend.MAV;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Indicates that a station (with a name) was found
     /// </summary>
-    public class StationIdentification : ParserStatement
+    public class StationIdStatement : ParserStatement
     {
         /// <summary>
         /// Name of the station
@@ -26,7 +27,7 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="name">Name of the station</param>
         /// <param name="number">MÁV's own internal number (only set when applicable, should not matter too much)</param>
-        public StationIdentification(APIResponse origin, string name, int? number)
+        public StationIdStatement(APIResponse origin, string name, int? number)
             : base(origin)
         {
             Name = name;
@@ -39,7 +40,7 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="script">JavaScript to parse</param>
         /// <returns>StationIdentification statement or null if parsing fails</returns>
-        public static StationIdentification? FromScript(APIResponse origin, string? script)
+        public static StationIdStatement? FromScript(APIResponse origin, string? script)
         {
             if (script == null) return null;
 
@@ -51,11 +52,23 @@ namespace MAVAppBackend.Parser.Statements
                 var stationName = data["a"]?.ToString();
 
                 if (stationName == null) return null;
-                return new StationIdentification(origin, stationName, id);
+                return new StationIdStatement(origin, stationName, id);
             }
             catch (JsonReaderException)
             {
                 return null;
+            }
+        }
+
+        public Station? DbStation { get; private set; } = null;
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            DbStation = appContext.Stations.Where(s => s.Name == Name).FirstOrDefault();
+            if (DbStation == null)
+            {
+                DbStation = new Station(Name);
+                appContext.Stations.Add(DbStation);
             }
         }
     }
