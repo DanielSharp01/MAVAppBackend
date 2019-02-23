@@ -64,7 +64,7 @@ namespace MAVAppBackend.Parser.Statements
 
         protected override void InternalProcess(AppContext appContext)
         {
-            DbStation = appContext.Stations.Where(s => s.Name == Name).FirstOrDefault();
+            DbStation = appContext.Stations.Where(s => s.NormalizedName == Station.NormalizeName(Name)).FirstOrDefault();
             if (DbStation == null)
             {
                 DbStation = new Station(Name);

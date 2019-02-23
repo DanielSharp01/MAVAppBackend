@@ -10,6 +10,7 @@ namespace MAVAppBackend.Entities
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public string NormalizedName { get => NormalizeName(Name); private set { } }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public DateTime ExpiryDate { get; set; }

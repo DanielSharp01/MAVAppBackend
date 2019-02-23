@@ -12,6 +12,8 @@
     {
         public Vector2 Vec { get; }
         public Projection Projection { get; }
+        public double X { get => Vec.X; set => Vec.X = value; }
+        public double Y { get => Vec.Y; set => Vec.Y = value; }
 
         public ProjVector2(Projection projection = Projection.Unprojected)
         {

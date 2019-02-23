@@ -45,6 +45,8 @@ namespace MAVAppBackend
             foreach (var result in results)
             {
                 int dist = LevenshteinDistance(stationName, Station.NormalizeName(result.StationName));
+                if (dist == 0) return result.Position;
+
                 if (minRes == null || dist < minDist)
                 {
                     minRes = result;
@@ -88,11 +90,9 @@ namespace MAVAppBackend
                     }
                 }
             }
-            catch (WebException e)
+            catch (WebException)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(e.Message);
-                Console.ResetColor();
+                // TODO: Log
                 throw new PlacesAPIException("Places API is unavailable.");
             }
 
