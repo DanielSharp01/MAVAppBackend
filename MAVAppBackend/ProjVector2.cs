@@ -10,8 +10,8 @@
 
     public class ProjVector2
     {
-        public Vector2 Vec { get; }
-        public Projection Projection { get; }
+        public Vector2 Vec { get; private set; }
+        public Projection Projection { get; private set; }
         public double X { get => Vec.X; set => Vec.X = value; }
         public double Y { get => Vec.Y; set => Vec.Y = value; }
 
@@ -100,6 +100,28 @@
 
 
             return new ProjVector2(ProjectionConversions.ProjectionToProjection(Projection, newProjection, Vec), newProjection);
+        }
+
+        public ProjVector2 IntoProjection(Projection newProjection)
+        {
+            if (Projection == newProjection)
+                return this;
+
+            if (newProjection == Projection.Unprojected)
+            {
+                Projection = Projection.Unprojected;
+                return this;
+            }
+
+            if (Projection == Projection.Unprojected)
+            {
+                Projection = newProjection;
+                return this;
+            }
+
+            Vec = ProjectionConversions.ProjectionToProjection(Projection, newProjection, Vec);
+            Projection = newProjection;
+            return this;
         }
 
         public double MeterLength => Length * ProjectionConversions.MeterPerUnit(Projection);

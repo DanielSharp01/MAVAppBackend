@@ -36,18 +36,17 @@ namespace MAVAppBackend
             }
         }
 
-        public static ProjVector2? Search(string stationName, ProjVector2 position, double radius)
+        public static ProjVector2? Search(Station station, ProjVector2 position, double radius, int maxLevenshtein)
         {
             int minDist = 0;
             PlacesAPIData? minRes = null;
-            var results = Scan(position, radius);
-            stationName = Station.NormalizeName(stationName);
+            var results = Scan(position.ToProjection(Projection.LatitudeLongitude), radius);
             foreach (var result in results)
             {
-                int dist = LevenshteinDistance(stationName, Station.NormalizeName(result.StationName));
+                int dist = LevenshteinDistance(station.NormalizedName, Station.NormalizeName(result.StationName));
                 if (dist == 0) return result.Position;
 
-                if (minRes == null || dist < minDist)
+                if (dist <= maxLevenshtein && (minRes == null || dist < minDist))
                 {
                     minRes = result;
                     minDist = dist;

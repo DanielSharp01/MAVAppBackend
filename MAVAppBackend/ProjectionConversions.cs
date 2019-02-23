@@ -68,7 +68,6 @@ namespace MAVAppBackend
 
         public const int DefaultTileSize = 256;
         public static Vector2 HungaryCenter => new Vector2(47.1569903, 18.4769959);
-
         private static Vector2? hungaryCenterWebMercator = null;
         public static Vector2 HungaryCenterWebMercator => hungaryCenterWebMercator ??= LatitudeLongitudeToUnscaledWebMercator(new Vector2(47.1569903, 18.4769959));
         public const double HungaryZoom = 8.13;
@@ -97,20 +96,11 @@ namespace MAVAppBackend
         {
             switch (projection)
             {
-                case Projection.UnscaledWebMercator: return ProjectionConversions.MeterPerUnitUnscaledWebMercator();
-                case Projection.WebMercatorHungary: return ProjectionConversions.MeterPerUnitWebMercatorHungary();
+                case Projection.WebMercatorHungary: return MeterPerUnitWebMercatorHungary;
                 default: throw new NotImplementedException();
             }
         }
 
-        public static double MeterPerUnitUnscaledWebMercator()
-        {
-            return Math.Cos(HungaryCenter.X * Math.PI / 180) * 6378137 * 2 * Math.PI;
-        }
-
-        public static double MeterPerUnitWebMercatorHungary()
-        {
-            return Math.Cos(HungaryCenter.X * Math.PI / 180) * 6378137 * 2 * Math.PI / (DefaultTileSize * Math.Pow(2, HungaryZoom));
-        }
+        public static readonly double MeterPerUnitWebMercatorHungary = Math.Cos(HungaryCenter.X * Math.PI / 180) * 6378137 * 2 * Math.PI / (DefaultTileSize * Math.Pow(2, HungaryZoom));
     }
 }
