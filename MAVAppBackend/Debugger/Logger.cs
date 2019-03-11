@@ -49,13 +49,16 @@ namespace MAVAppBackend.Debugger
 
     public class Logger : MessageServerBase<LogMessage, LoggerClient>
     {
+        private int counter = 0;
         public Logger(IList<LogMessage> startingMessages)
             : base(startingMessages)
         { }
 
         public void Log(string message, string[] tags)
         {
-            SendToAll(new LogMessage(messages.Count, message, tags));
+            SendToAll(new LogMessage(counter++, message, tags));
+
+            if (counter < 0) counter = 0; // should it ever overflow
         }
 
         public string GetFirstTimeResult(string? loggerName, HttpRequest request)
