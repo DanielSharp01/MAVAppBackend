@@ -14,21 +14,21 @@ namespace MAVAppBackend
     {
         public static void Main(string[] args)
         {
-            //CreateWebHostBuilder(args).Build().Run();
+            CreateWebHostBuilder(args).Build().Run();
 
-            while (true)
-            {
-                var response = Task.Run(async () =>
-                {
-                    return await new MAV.TrainsAPIRequest().GetResponse();
-                    //return await new MAV.TrainAPIRequest(trainId: int.Parse(Console.ReadLine())).GetResponse();
-                    //return await new MAV.StationAPIRequest(Console.ReadLine()).GetResponse();
-                    //return await new MAV.RouteAPIRequest(Console.ReadLine(), Console.ReadLine()).GetResponse();
-                }).GetAwaiter().GetResult();
+            //while (true)
+            //{
+            //    var response = Task.Run(async () =>
+            //    {
+            //        return await new MAV.TrainsAPIRequest().GetResponse();
+            //        //return await new MAV.TrainAPIRequest(trainId: int.Parse(Console.ReadLine())).GetResponse();
+            //        //return await new MAV.StationAPIRequest(Console.ReadLine()).GetResponse();
+            //        //return await new MAV.RouteAPIRequest(Console.ReadLine(), Console.ReadLine()).GetResponse();
+            //    }).GetAwaiter().GetResult();
 
-                var list = TrainsParser.Parse(response).ToList();
-                Console.Clear();
-            }
+            //    var list = TrainsParser.Parse(response).ToList();
+            //    Console.Clear();
+            //}
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>

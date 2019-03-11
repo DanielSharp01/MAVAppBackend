@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using MAVAppBackend.ServerSentEvents;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Threading.Tasks;
 
 namespace MAVAppBackend
 {
@@ -33,6 +37,14 @@ namespace MAVAppBackend
             }
 
             app.UseMvc();
+
+            app.Map("/sse-test", sse => sse.Run(async context =>
+            {
+                var sseClient = new ServerSentEventClient(new Guid(), context.Response);
+                await sseClient.SendEventAsync(new ServerSentEvent() { Id = 1, Name = "hello", Data = new JObject { ["key"] = "Hello SSE!" } });
+                await Task.Delay(TimeSpan.FromSeconds(2));
+                await sseClient.SendEventAsync(new ServerSentEvent() { Id = 1, Name = "hello", Data = new JObject { ["key"] = "I see you are curious!" } });
+            }));
         }
     }
 }
