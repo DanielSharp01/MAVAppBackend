@@ -9,12 +9,12 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Tells the latitude, longitude of a moving train coming from the dynamic TRAINS API
     /// </summary>
-    public class TrainPosition : ParserStatement
+    public class TrainPositionStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train
         /// </summary>
-        public TrainIdentification Id { get; }
+        public TrainIdStatement Id { get; }
 
         /// <summary>
         /// Latitude in degrees
@@ -30,12 +30,20 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="id">Identifies the train</param>
         /// <param name="latitude">Latitude in degrees</param>
         /// <param name="longitude">Longitude in degrees</param>
-        public TrainPosition(APIResponse origin, TrainIdentification id, double latitude, double longitude)
+        public TrainPositionStatement(APIResponse origin, TrainIdStatement id, double latitude, double longitude)
             : base(origin)
         {
             Id = id;
             Latitude = latitude;
             Longitude = longitude;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (Id.DbTrainInstance == null) return;
+
+            Id.DbTrainInstance.Latitude = Latitude;
+            Id.DbTrainInstance.Longitude = Longitude;
         }
     }
 }

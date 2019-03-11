@@ -9,12 +9,12 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Indicates whether the station was hit (according to the API, this is innacurate as hell)
     /// </summary>
-    public class TrainStationHit : ParserStatement
+    public class TrainStationHitStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train and its station
         /// </summary>
-        public TrainStation TrainStationId { get; }
+        public TrainStationStatement TrainStationId { get; }
 
         /// <summary>
         /// Indicates whether the station was hit
@@ -24,11 +24,16 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="origin">API response that was processed to make this statement</param>
         /// <param name="trainStationId">Identifies the train and its station</param>
         /// <param name="isHit">Indicates whether the station was hit</param>
-        public TrainStationHit(APIResponse origin, TrainStation trainStationId, bool isHit)
+        public TrainStationHitStatement(APIResponse origin, TrainStationStatement trainStationId, bool isHit)
             : base(origin)
         {
             TrainStationId = trainStationId;
             IsHit = isHit;
+        }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            // We don't process this for now
         }
     }
 }

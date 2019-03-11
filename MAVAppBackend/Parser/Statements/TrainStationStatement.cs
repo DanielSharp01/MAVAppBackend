@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MAVAppBackend.Entities;
 using MAVAppBackend.MAV;
 
 namespace MAVAppBackend.Parser.Statements
@@ -9,17 +10,17 @@ namespace MAVAppBackend.Parser.Statements
     /// <summary>
     /// Links a train and a station together
     /// </summary>
-    public class TrainStation : ParserStatement
+    public class TrainStationStatement : ParserStatement
     {
         /// <summary>
         /// Identifies the train
         /// </summary>
-        public TrainIdentification TrainId { get; }
+        public TrainIdStatement TrainId { get; }
 
         /// <summary>
         /// Station of the train
         /// </summary>
-        public StationIdentification StationId { get; }
+        public StationIdStatement StationId { get; }
 
         /// <summary>
         /// Time the train arrives at (null may indicate first station or no time tuple data <see cref="HasTimeInfo">HasTimeInfo</see> for more info)
@@ -38,7 +39,7 @@ namespace MAVAppBackend.Parser.Statements
         /// <param name="stationId">Station of the train</param>
         /// <param name="arrival">Time the train arrives at (null may indicate first station, this will set <see cref="HasTimeInfo">HasTimeInfo</see> to false if departure is also null)</param>
         /// <param name="departure">Time the train departs at (null may indicate last station, this will set <see cref="HasTimeInfo">HasTimeInfo</see> to false if arrival is also null)</param>
-        public TrainStation(APIResponse origin, TrainIdentification trainId, StationIdentification stationId, TimeTuple? arrival, TimeTuple? departure)
+        public TrainStationStatement(APIResponse origin, TrainIdStatement trainId, StationIdStatement stationId, TimeTuple? arrival, TimeTuple? departure)
             : base(origin)
         {
             TrainId = trainId;
@@ -46,6 +47,23 @@ namespace MAVAppBackend.Parser.Statements
             Arrival = arrival;
             Departure = departure;
             HasTimeInfo = arrival != null || departure != null;
+        }
+
+        public TrainStation? DbTrainStation { get; private set; }
+
+        protected override void InternalProcess(AppContext appContext)
+        {
+            if (TrainId.DbTrain == null) return;
+            if (StationId.DbStation == null) return;
+
+            DbTrainStation = appContext.TrainStations.Where(s => s.TrainId == TrainId.DbTrain.Id && s.StationId == StationId.DbStation.Id).FirstOrDefault();
+            if (DbTrainStation == null)
+            {
+                DbTrainStation = new TrainStation(TrainId.DbTrain, StationId.DbStation);
+                appContext.TrainStations.Add(DbTrainStation);
+                DbTrainStation.Arrival = Arrival?.Scheduled;
+                DbTrainStation.Departure = Departure?.Scheduled;
+            }
         }
     }
 }

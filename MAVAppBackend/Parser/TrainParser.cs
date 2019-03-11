@@ -27,7 +27,7 @@ namespace MAVAppBackend.Parser
 
             int? trainNumber = null;
             string? elviraId = null;
-            TrainIdentification? id = null;
+            TrainIdStatement? id = null;
 
             if (response.Param?["vsz"] != null)
             {
@@ -40,7 +40,7 @@ namespace MAVAppBackend.Parser
 
             if (trainNumber != null)
             {
-                yield return id = new TrainIdentification(response, trainNumber.Value, elviraId);
+                yield return id = new TrainIdStatement(response, trainNumber.Value, elviraId);
             }
 
             if (response.Result?["html"] != null)
@@ -62,9 +62,9 @@ namespace MAVAppBackend.Parser
                                 .FirstOrDefault(li => li.Attributes.Contains("style") && li.Attributes["style"].Value.Contains("bolder"))
                                 ?.Descendants("a").FirstOrDefault();
 
-                        yield return new TrainExpiry(response, id, expiryDateLink == null ? (DateTime?)null : DateTime.Parse(expiryDateLink.InnerText.Split('-')[1]));
+                        yield return new TrainExpiryStatement(response, id, expiryDateLink == null ? (DateTime?)null : DateTime.Parse(expiryDateLink.InnerText.Split('-')[1]));
 
-                        StationIdentification? lastStation = null;
+                        StationIdStatement? lastStation = null;
                         foreach (HtmlNode tr in table.ChildNodes.Where(n => n.Name == "tr" && n.Attributes["onmouseover"] != null && n.Attributes["onmouseout"] != null))
                         {
                             foreach (ParserStatement statement in ProcessStationTableRow(response, tr, id, ref lastStation))
@@ -80,7 +80,7 @@ namespace MAVAppBackend.Parser
 
             if (id != null && response.Result?["line"][0]["points"] != null)
             {
-                yield return new TrainPolyline(response, id, response.Result?["line"][0]["points"]?.ToString());
+                yield return new TrainPolylineStatement(response, id, response.Result?["line"][0]["points"]?.ToString());
             }
         }
 
@@ -92,7 +92,7 @@ namespace MAVAppBackend.Parser
         /// <param name="id">Identifies the train</param>
         /// <param name="elviraId"></param>
         /// <returns>List of parser statements</returns>
-        private static List<ParserStatement> ProcessHeader(APIResponse response, HtmlNode table, ref TrainIdentification? id, string? elviraId)
+        private static List<ParserStatement> ProcessHeader(APIResponse response, HtmlNode table, ref TrainIdStatement? id, string? elviraId)
         {
             List<ParserStatement> ret = new List<ParserStatement>();
             TrainType? type = null;
@@ -121,7 +121,7 @@ namespace MAVAppBackend.Parser
 
                 if (trainNumber != null)
                 {
-                    ret.Add(id = new TrainIdentification(response, trainNumber.Value, elviraId));
+                    ret.Add(id = new TrainIdStatement(response, trainNumber.Value, elviraId));
                 }
                 else
                 {
@@ -145,7 +145,7 @@ namespace MAVAppBackend.Parser
                 }
             }
 
-            ret.Add(new TrainName(response, id, name));
+            ret.Add(new TrainNameStatement(response, id, name));
 
             while (headerEnum.MoveNext())
             {
@@ -160,28 +160,28 @@ namespace MAVAppBackend.Parser
                 }
                 else if (headerEnum.Current.Name == "span" && headerEnum.Current.HasClass("viszszam2"))
                 {
-                    ret.Add(new TrainVisz(response, id, headerEnum.Current.InnerText));
+                    ret.Add(new TrainViszStatement(response, id, headerEnum.Current.InnerText));
                 }
                 else if (headerEnum.Current.Name == "font")
                 {
                     var relationText = headerEnum.Current.InnerText.Substr(1, -1).Split(',')[0].Trim();
                     var stationNames = relationText.Split(" - ").Select(s => s.Trim()).ToArray();
                     
-                    var from = new StationIdentification(response, stationNames[0], null);
-                    var to = new StationIdentification(response, stationNames[1], null);
+                    var from = new StationIdStatement(response, stationNames[0], null);
+                    var to = new StationIdStatement(response, stationNames[1], null);
                     ret.Add(from);
                     ret.Add(to);
-                    ret.Add(new TrainRelation(response, id, from, to));
+                    ret.Add(new TrainRelationStatement(response, id, from, to));
 
                     if (type != null)
                     {
-                        ret.Add(new TrainHasType(response, id, type.Value));
+                        ret.Add(new TrainTypeStatement(response, id, type.Value));
                     }
                 }
                 else if (headerEnum.Current.Name == "ul")
                 {
-                    StationIdentification? firstFrom = null;
-                    StationIdentification? lastTo = null;
+                    StationIdStatement? firstFrom = null;
+                    StationIdStatement? lastTo = null;
                     foreach (HtmlNode li in headerEnum.Current.ChildNodes.Where(n => n.Name == "li"))
                     {
                         var liEnum = li.ChildNodes.AsEnumerable().GetEnumerator();
@@ -205,19 +205,19 @@ namespace MAVAppBackend.Parser
                         }
                         if (fromStation != null && toStation != null && relType != null)
                         {
-                            var from = new StationIdentification(response, fromStation, null);
+                            var from = new StationIdStatement(response, fromStation, null);
                             if (firstFrom != null) firstFrom = from;
-                            var to = new StationIdentification(response, toStation, null);
+                            var to = new StationIdStatement(response, toStation, null);
                             lastTo = to;
                             ret.Add(from);
                             ret.Add(to);
-                            ret.Add(new TrainSubrelation(response, id, from, to, relType.Value));
+                            ret.Add(new TrainSubrelationStatement(response, id, from, to, relType.Value));
                         }
                     }
 
                     if (firstFrom != null && lastTo != null)
                     {
-                        ret.Add(new TrainRelation(response, id, firstFrom, lastTo));
+                        ret.Add(new TrainRelationStatement(response, id, firstFrom, lastTo));
                     }
                 }
             }
@@ -234,12 +234,12 @@ namespace MAVAppBackend.Parser
         /// <param name="id">Identifies the train</param>
         /// <param name="lastStation">Last station (to link sequential stations together)</param>
         /// <returns>Parser statements</returns>
-        private static List<ParserStatement> ProcessStationTableRow(APIResponse response, HtmlNode row, TrainIdentification id, ref StationIdentification? lastStation)
+        private static List<ParserStatement> ProcessStationTableRow(APIResponse response, HtmlNode row, TrainIdStatement id, ref StationIdStatement? lastStation)
         {
             List<ParserStatement> ret = new List<ParserStatement>();
             var tds = row.ChildNodes.Where(n => n.Name == "td").ToArray();
             var stationLink = tds[1].Descendants("a").FirstOrDefault();
-            var stationId = StationIdentification.FromScript(response, stationLink?.Attributes["onclick"]?.Value);
+            var stationId = StationIdStatement.FromScript(response, stationLink?.Attributes["onclick"]?.Value);
             if (stationId != null)
             {
                 ret.Add(stationId);
@@ -247,7 +247,7 @@ namespace MAVAppBackend.Parser
             else
             {
                 ret.Add(new ErrorStatement(response, ErrorTypes.StationLinkUnparsable));
-                ret.Add(stationId = new StationIdentification(response, stationLink?.InnerText.Trim(), null));
+                ret.Add(stationId = new StationIdStatement(response, stationLink?.InnerText.Trim(), null));
             }
 
             var hit = row.HasClass("row_past_odd") || row.HasClass("row_past_even");
@@ -257,18 +257,18 @@ namespace MAVAppBackend.Parser
             var platform = (tds.Length > 4) ? tds[4].InnerText.Trim() : null;
             if (platform?.Length == 0) platform = null;
 
-            var trainStationId = new TrainStation(response, id, stationId, arrival, departure);
+            var trainStationId = new TrainStationStatement(response, id, stationId, arrival, departure);
             ret.Add(trainStationId);
             if (lastStation != null)
             {
-                ret.Add(new TrainStationLink(response, id, lastStation, stationId, true));
+                ret.Add(new TrainStationLinkStatement(response, id, lastStation, stationId, true));
             }
 
             lastStation = stationId;
 
-            ret.Add(new TrainStationDistance(response, trainStationId, distance));
-            ret.Add(new TrainStationPlatform(response, trainStationId, platform));
-            ret.Add(new TrainStationHit(response, trainStationId, hit));
+            ret.Add(new TrainStationDistanceStatement(response, trainStationId, distance));
+            ret.Add(new TrainStationPlatformStatement(response, trainStationId, platform));
+            ret.Add(new TrainStationHitStatement(response, trainStationId, hit));
 
             return ret;
         }

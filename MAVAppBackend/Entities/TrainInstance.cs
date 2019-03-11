@@ -20,6 +20,8 @@ namespace MAVAppBackend.Entities
     {
         public int Id { get; set; }
         public string ElviraId { get; set; }
+        public int TrainId { get; set; }
+        public Train Train { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public int Delay { get; set; }
@@ -27,9 +29,10 @@ namespace MAVAppBackend.Entities
 
         private TrainInstance() { }
 
-        public TrainInstance(string elviraId)
+        public TrainInstance(string elviraId, Train train)
         {
             ElviraId = elviraId;
+            Train = train;
         }
     }
 }

@@ -27,17 +27,17 @@ namespace MAVAppBackend.Parser
             {
                 foreach (var train in trainArray)
                 {
-                    var tid = new TrainIdentification(response, null, train["@ElviraID"]?.ToString());
+                    var tid = new TrainIdStatement(response, null, train["@ElviraID"]?.ToString());
                     if (tid.ElviraId == null) continue;
 
                     yield return tid;
                     if (train["@Delay"] != null)
                     {
-                        yield return new TrainDelay(response, tid, train["@Delay"].ToObject<int>());
+                        yield return new TrainDelayStatement(response, tid, train["@Delay"].ToObject<int>());
                     }
                     if (train["@Lat"] != null && train["@Lon"] != null)
                     {
-                        yield return new TrainPosition(response, tid, train["@Lat"].ToObject<double>(), train["@Lon"].ToObject<double>());
+                        yield return new TrainPositionStatement(response, tid, train["@Lat"].ToObject<double>(), train["@Lon"].ToObject<double>());
                     }
                 }
             }

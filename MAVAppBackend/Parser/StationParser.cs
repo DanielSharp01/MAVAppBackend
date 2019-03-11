@@ -34,7 +34,7 @@ namespace MAVAppBackend.Parser
                 if (table != null)
                 {
                     var stationName = table.Descendants("th").Where(d => d.HasClass("title")).FirstOrDefault().ChildNodes.FirstOrDefault().InnerText;
-                    var stationId = new StationIdentification(response, stationName, null);
+                    var stationId = new StationIdStatement(response, stationName, null);
                     yield return stationId;
 
                     foreach (HtmlNode tr in table.ChildNodes.Where(n => n.Name == "tr" && n.Attributes["onmouseover"] != null && n.Attributes["onmouseout"] != null))
@@ -50,13 +50,13 @@ namespace MAVAppBackend.Parser
                             yield return s;
                         }
 
-                        if (!(trainRefStatements.First() is TrainIdentification trainId)) yield break;
+                        if (!(trainRefStatements.First() is TrainIdStatement trainId)) yield break;
 
-                        var trainStationId = new TrainStation(response, trainId, stationId, arrival, departure);
+                        var trainStationId = new TrainStationStatement(response, trainId, stationId, arrival, departure);
                         yield return trainStationId;
                         var platform = tds.Length > 3 ? tds[2].InnerText.Trim() : null;
                         if (platform?.Length == 0) platform = null;
-                        yield return new TrainStationPlatform(response, trainStationId, platform);
+                        yield return new TrainStationPlatformStatement(response, trainStationId, platform);
                     }
                 }
                 else yield return new ErrorStatement(response, ErrorTypes.NoTable);
@@ -64,10 +64,10 @@ namespace MAVAppBackend.Parser
             else yield return new ErrorStatement(response, ErrorTypes.NoResult);
         }
 
-        public static IEnumerable<ParserStatement> ParseTrainReference(APIResponse response, HtmlNode trainReference, StationIdentification station, TimeSpan? arrival, TimeSpan? departure)
+        public static IEnumerable<ParserStatement> ParseTrainReference(APIResponse response, HtmlNode trainReference, StationIdStatement station, TimeSpan? arrival, TimeSpan? departure)
         {
             var enumerator = trainReference.ChildNodes.AsEnumerable().GetEnumerator();
-            TrainIdentification id;
+            TrainIdStatement id;
             if (enumerator.MoveNext())
             {
                 if (enumerator.Current.Name == "a")
@@ -77,7 +77,7 @@ namespace MAVAppBackend.Parser
 
                     if (trainNumber != null)
                     {
-                        yield return id = new TrainIdentification(response, trainNumber.Value, elviraId);
+                        yield return id = new TrainIdStatement(response, trainNumber.Value, elviraId);
                     }
                     else
                     {
@@ -117,12 +117,12 @@ namespace MAVAppBackend.Parser
 
                 if (name != null)
                 {
-                    yield return new TrainName(response, id, name);
+                    yield return new TrainNameStatement(response, id, name);
                 }
 
                 if (type != null)
                 {
-                    yield return new TrainHasType(response, id, type.Value);
+                    yield return new TrainTypeStatement(response, id, type.Value);
                 }
                 else throw new Exception("Type does not map!");
             }
@@ -159,9 +159,9 @@ namespace MAVAppBackend.Parser
                     arrival = toTime;
                 }
 
-                var from = parts[0] != "" ? new StationIdentification(response, p0[1].Trim(), null) : station;
-                var to = parts[1] != "" ? new StationIdentification(response, p1[0].Trim(), null) : station;
-                yield return new TrainRelation(response, id, from, to, departure, arrival);
+                var from = parts[0] != "" ? new StationIdStatement(response, p0[1].Trim(), null) : station;
+                var to = parts[1] != "" ? new StationIdStatement(response, p1[0].Trim(), null) : station;
+                yield return new TrainRelationStatement(response, id, from, to, departure, arrival);
             }
         }
 

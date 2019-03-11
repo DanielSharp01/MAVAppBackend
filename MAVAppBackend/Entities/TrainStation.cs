@@ -13,8 +13,10 @@ namespace MAVAppBackend.Entities
         public int StationId { get; private set; }
         public Station Station { get; set; }
         public double? Distance { get; set; }
+        public int? IntDistance { get; set; }
         public TimeSpan? Arrival { get; set; }
         public TimeSpan? Departure { get; set; }
+        public string? Platform { get; set; }
 
         private TrainStation() { }
 

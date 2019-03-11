@@ -22,9 +22,21 @@ namespace MAVAppBackend
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Station>().Property(e => e.Name).IsRequired(true).HasMaxLength(255);
+            modelBuilder.Entity<Station>().HasIndex(e => e.NormalizedName).IsUnique();
+            modelBuilder.Entity<Station>().Property(e => e.NormalizedName).IsRequired(true).HasMaxLength(255);
+
+            modelBuilder.Entity<Train>().HasIndex(e => e.TrainNumber).IsUnique();
+            modelBuilder.Entity<Train>().Property(e => e.Name).HasMaxLength(255);
+            modelBuilder.Entity<Train>().Property(e => e.ViszNumber).HasMaxLength(16);
+
             modelBuilder.Entity<TrainInstance>().Property(e => e.ElviraId).IsRequired(true).HasMaxLength(16);
+            modelBuilder.Entity<TrainInstance>().HasIndex(e => e.ElviraId).IsUnique();
+
             modelBuilder.Entity<TrainStationLink>().Property(e => e.FromId).IsRequired(false);
             modelBuilder.Entity<TrainStationLink>().Property(e => e.ToId).IsRequired(false);
+
+            modelBuilder.Entity<TrainStation>().HasIndex(e => new {e.TrainId, e.StationId}).IsUnique();
+            modelBuilder.Entity<TrainStation>().Property(e => e.Platform).HasMaxLength(16);
         }
     }
 }
