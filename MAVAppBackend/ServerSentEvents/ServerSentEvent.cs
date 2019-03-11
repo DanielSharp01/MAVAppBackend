@@ -1,9 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace MAVAppBackend.ServerSentEvents
 {
@@ -11,14 +8,21 @@ namespace MAVAppBackend.ServerSentEvents
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public JObject Data { get; set; }
+        public string Data { get; set; }
+
+        public ServerSentEvent(int id, string name, string data)
+        {
+            Id = id;
+            Name = name;
+            Data = data;
+        }
 
         public string ToResponseString()
         {
             var builder = new StringBuilder();
             builder.Append($"id: {Id}\n");
             builder.Append($"event: {Name}\n");
-            builder.Append($"data: {Data.ToString()}\n");
+            builder.Append($"data: {Data}\n");
             builder.Append("\n");
             return builder.ToString();
         }

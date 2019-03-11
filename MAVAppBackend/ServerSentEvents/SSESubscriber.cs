@@ -6,20 +6,25 @@ using System.Threading.Tasks;
 
 namespace MAVAppBackend.ServerSentEvents
 {
-    public class ServerSentEventClient
+    public class SSESubscriber
     {
         private readonly HttpResponse response;
 
         public Guid Id { get; private set; }
 
-        public ServerSentEventClient(Guid id, HttpResponse response)
+        public int? LastEventId { get; private set; }
+
+        public SSESubscriber(Guid id, HttpResponse response, int? lastEventId)
         {
             this.response = response;
-            Id = Id;
+            Id = id;
+            LastEventId = lastEventId;
+            response.ContentType = "text/event-stream";
         }
 
         public Task SendEventAsync(ServerSentEvent sse)
         {
+            LastEventId = sse.Id;
             return response.WriteAsync(sse.ToResponseString());
         }
     }
