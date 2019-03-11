@@ -2,20 +2,20 @@
 using Newtonsoft.Json.Linq;
 using System.Text;
 
-namespace MAVAppBackend.ServerSentEvents
+namespace MAVAppBackend.Debugger
 {
-    public struct ServerSentEvent
+    public abstract class MessageBase : IMessage
     {
-        public int Id { get; set; }
+        public int Id { get; }
         public string Name { get; set; }
-        public string Data { get; set; }
 
-        public ServerSentEvent(int id, string name, string data)
+        public MessageBase(int id, string name)
         {
             Id = id;
             Name = name;
-            Data = data;
         }
+
+        public abstract string Data { get; }
 
         public string ToResponseString()
         {
